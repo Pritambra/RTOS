@@ -28,21 +28,44 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+extern void toggleLED(uint8_t ledNumber);
 
+void vLedTask(void *pvParameters)
+{
+    uint8_t ledNumber = ((uint8_t*)pvParameters)[0];  
+    uint32_t rate = ((uint32_t*)pvParameters)[1];     
+
+    while (1)
+    {
+        toggleLED(ledNumber); 
+        vTaskDelay(pdMS_TO_TICKS(rate));  
+    }
+}
 
 int main(void)
 {
-	led_init(LED_RED);
-	led_init(LED_GREEN);
 
-	xTaskCreate(vMainAperiodicTask1Function, "Periodic", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(vMainPeriodicTask2Function, "Periodic", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-	xTaskCreate(vMainAperiodicTask3Function, "Periodic", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
-	xTaskCreate(vMainPeriodicTask4Function, "Periodic", configMINIMAL_STACK_SIZE, NULL, 4, NULL);
+    uint8_t ledTask1Params[] = {0, 500};  
+    uint8_t ledTask2Params[] = {1, 1000}; 
+    uint8_t ledTask3Params[] = {2, 1500}; 
+    uint8_t ledTask4Params[] = {3, 2000}; 
 
-	vTaskStartScheduler();
-	while(1);
+    xTaskCreate(vLedTask, "LED Task 1", configMINIMAL_STACK_SIZE, ledTask1Params, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vLedTask, "LED Task 2", configMINIMAL_STACK_SIZE, ledTask2Params, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vLedTask, "LED Task 3", configMINIMAL_STACK_SIZE, ledTask3Params, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(vLedTask, "LED Task 4", configMINIMAL_STACK_SIZE, ledTask4Params, tskIDLE_PRIORITY, NULL);
+
+    vTaskStartScheduler();
+
+    for (;;);
+    return 0;
 }
+
+void toggleLED(uint8_t ledNumber)
+{
+    printf("Toggling LED %d\n", ledNumber);
+}
+
 
 
 
